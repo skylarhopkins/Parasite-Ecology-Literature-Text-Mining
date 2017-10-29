@@ -39,22 +39,47 @@ Words <- tm_map(Words, removePunctuation)
 # Eliminate extra white spaces
 Words <- tm_map(Words, stripWhitespace)
 
-# Text stemming - this removes suffixes so we're working w/ root words 
+# Text stemming - this removes suffixes so we're working w/ root words
+#But stemCompletion isn't working - maybe package error? - so I'm skipping it
+#Words.copy<-Words #make a copy to use for stemCompletion
 #Words <- tm_map(Words, stemDocument)
+#Words <- tm_map(Words, stemCompletion, dictionary=Words.copy)
 
 #Build a word frequency table
 dtm <- TermDocumentMatrix(Words)
 m <- as.matrix(dtm)
 v <- sort(rowSums(m),decreasing=TRUE)
 Table <- data.frame(word = names(v),freq=v)
-head(Table, 50)
+head(Table, 200)
 
-##I want parasite/parasites and host/hosts to be one word each
+##I want parasite/parasites, host/hosts, plant/plants to be one word each
+#Here's a clunky solution
 Table$freq[Table$word=="parasites"]<-Table$freq[Table$word=="parasites"]+Table$freq[Table$word=="parasite"]
 Table$freq[Table$word=="hosts"]<-Table$freq[Table$word=="hosts"]+Table$freq[Table$word=="host"]
+Table$freq[Table$word=="plants"]<-Table$freq[Table$word=="plants"]+Table$freq[Table$word=="plant"]
+Table$freq[Table$word=="individuals"]<-Table$freq[Table$word=="individuals"]+Table$freq[Table$word=="individual"]
+Table$freq[Table$word=="populations"]<-Table$freq[Table$word=="populations"]+Table$freq[Table$word=="population"]
+Table$freq[Table$word=="communities"]<-Table$freq[Table$word=="communities"]+Table$freq[Table$word=="community"]
+Table$freq[Table$word=="ecosystems"]<-Table$freq[Table$word=="ecosystems"]+Table$freq[Table$word=="ecosystem"]
 Table<-Table[Table$word!="parasite",]
 Table<-Table[Table$word!="host",]
+Table<-Table[Table$word!="plant",]
+Table<-Table[Table$word!="individual",]
+Table<-Table[Table$word!="population",]
+Table<-Table[Table$word!="community",]
+Table<-Table[Table$word!="ecosystem",]
 
 #Build our word cloud
-wordcloud(words = Table$word, freq = Table$freq, min.freq = 1, max.words=200, random.order=FALSE, rot.per=0.35, colors=brewer.pal(8, "Dark2"))
-warnings()
+numwords<-115
+#aspect ratio can only be variable if percent of rotate words = 0
+wordcloud(words = Table$word, freq = Table$freq, min.freq = 1, max.words=numwords, random.order=FALSE, rot.per=0, fixed.asp=F, colors=brewer.pal(8, "Dark2"))
+
+#Save the wordcloud to a high res .png
+#if you don't make the dimensions wide enough, the words don't all fit 
+png("WordCloud115WordsV2.png", width = 7, height= 3, units = "in", res = 1200)
+par(mar = c(0, 0, 0, 0))
+numwords<-150
+wordcloud(words = Table$word, freq = Table$freq, min.freq = 1, max.words=numwords, random.order=FALSE, rot.per=0, fixed.asp=F, colors=brewer.pal(8, "Dark2"))
+dev.off()
+
+which(Table$word=="ecosystems") #ecosystems doesn't make it on
